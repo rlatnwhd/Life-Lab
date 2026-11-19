@@ -46,7 +46,7 @@ export function useLabStore(){
  async function login(){
   if(authenticating.current||writing.current)return;
   authenticating.current=true;setAuthBusy(true);setAuthError('');
-  try{await signInWithPopup(auth,googleProvider)}catch(error){setAuthError(firebaseMessage(error))}finally{authenticating.current=false;setAuthBusy(false)}
+  try{await signInWithPopup(auth,googleProvider)}catch(error){console.error('[Life Lab] Login failed:',(error as {code?:string}).code??'unknown');setAuthError(firebaseMessage(error))}finally{authenticating.current=false;setAuthBusy(false)}
  }
  async function logout(){
   if(authenticating.current||writing.current)return;

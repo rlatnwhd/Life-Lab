@@ -42,14 +42,14 @@ export function firebaseMessage(error: unknown) {
     case 'auth/popup-closed-by-user': return '로그인 창을 닫았어요. 다시 시도할 수 있습니다.';
     case 'auth/cancelled-popup-request': return '이미 로그인 창이 열려 있어요.';
     case 'auth/popup-blocked': return '브라우저가 로그인 팝업을 차단했습니다. 이 사이트의 팝업을 허용해 주세요.';
-    case 'auth/unauthorized-domain': return '현재 접속 주소가 로그인 승인 목록과 일치하지 않아요. 127.0.0.1 대신 http://localhost:5173 으로 접속해 주세요. localhost에서도 발생하면 실제 오류를 확인해 주세요. (auth/unauthorized-domain)';
-    case 'auth/operation-not-allowed': return 'Firebase Authentication에서 Google 로그인을 사용 설정해 주세요.';
+    case 'auth/unauthorized-domain': return '지금은 로그인할 수 없어요. 잠시 후 다시 시도해 주세요.';
+    case 'auth/operation-not-allowed': return '지금은 로그인할 수 없어요. 잠시 후 다시 시도해 주세요.';
     case 'auth/user-mismatch': return '탈퇴하려는 계정과 다른 Google 계정을 선택했습니다. 현재 로그인한 계정으로 다시 확인해 주세요.';
     case 'auth/requires-recent-login': return '보안을 위해 본인 확인이 다시 필요합니다. Google 계정을 확인한 뒤 다시 시도해 주세요.';
     case 'auth/network-request-failed': case 'unavailable': return '서버에 연결할 수 없어요. 인터넷 연결을 확인한 뒤 다시 시도해 주세요.';
-    case 'permission-denied': return '계정의 저장 권한을 확인할 수 없어요. Firebase Firestore 규칙 탭에 프로젝트의 firestore.rules 내용을 게시해 주세요.';
+    case 'permission-denied': return '기록에 접근할 수 없어요. 다시 로그인한 후 시도해 주세요.';
     case 'unauthenticated': case 'auth/user-token-expired': return '로그인이 만료되었습니다. 다시 로그인해 주세요.';
     case 'resource-exhausted': return '저장 서비스의 사용량 한도에 도달했어요. 잠시 후 다시 시도해 주세요.';
-    default: return error instanceof Error&&!code?error.message:`요청을 완료하지 못했습니다. 잠시 후 다시 시도해 주세요.${code?` (${code})`:''}`;
+    default: return error instanceof Error&&!code?error.message:'요청을 완료하지 못했어요. 잠시 후 다시 시도해 주세요.';
   }
 }
