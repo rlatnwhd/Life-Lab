@@ -1,0 +1,27 @@
+.modal input[aria-invalid="true"], .modal textarea[aria-invalid="true"], .modal select[aria-invalid="true"], .record-form input[aria-invalid="true"] {
+  border: 2px solid #c62828 !important;
+  background: #fff5f5 !important;
+  color: #991b1b !important;
+  box-shadow: 0 0 0 3px #c6282810 !important;
+}
+.modal input[aria-invalid="true"]:focus, .record-form input[aria-invalid="true"]:focus {
+  outline: 3px solid #c6282828;
+  outline-offset: 2px;
+}
+.field-error {
+  display: flex !important;
+  align-items: flex-start;
+  gap: 7px;
+  margin-top: 9px;
+  color: #b91c1c !important;
+  font-size: 14px !important;
+  font-weight: 650;
+  line-height: 1.6;
+  letter-spacing: 0;
+}
+.field-error svg { flex: 0 0 17px; margin-top: 3px; }
+.measurement-limit { display: block; margin-top: 8px; color: #44516b; font-size: 13px; line-height: 1.6; }
+.required-star { display: inline !important; position: relative; top: -.25em; color: #c62828 !important; font-size: 12px; font-weight: 750; line-height: 1; margin-left: 0 !important; }
+.field-label { display: block; }
+.required-legend { margin: 10px 0 20px; font-size: 13px; color: #59647a; line-height: 1.6; }
+.required-legend .required-star { top: 0; margin: 0 4px 0 0; }

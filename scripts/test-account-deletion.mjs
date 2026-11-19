@@ -1,0 +1,41 @@
+import fs from 'node:fs';
+import ts from 'typescript';
+import assert from 'node:assert/strict';
+import { initializeApp, deleteApp } from 'firebase/app';
+import { getAuth, connectAuthEmulator, createUserWithEmailAndPassword, signInWithEmailAndPassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
+import { getFirestore, connectFirestoreEmulator, doc, collection, getDocs, writeBatch, serverTimestamp, terminate } from 'firebase/firestore';
+import { initializeTestEnvironment } from '@firebase/rules-unit-testing';
+
+assert.equal(process.env.GCLOUD_PROJECT,'demo-life-lab');
+assert.ok(process.env.FIREBASE_AUTH_EMULATOR_HOST);
+assert.ok(process.env.FIRESTORE_EMULATOR_HOST);
+let code=ts.transpileModule(fs.readFileSync('src/accountDeletion.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.ES2022,target:ts.ScriptTarget.ES2022}}).outputText;
+code=code.replaceAll('"firebase/auth"',JSON.stringify(import.meta.resolve('firebase/auth'))).replaceAll("'firebase/auth'",JSON.stringify(import.meta.resolve('firebase/auth'))).replaceAll('"firebase/firestore"',JSON.stringify(import.meta.resolve('firebase/firestore'))).replaceAll("'firebase/firestore'",JSON.stringify(import.meta.resolve('firebase/firestore')));
+const {eraseAccount}=await import('data:text/javascript;base64,'+Buffer.from(code).toString('base64'));
+const app=initializeApp({apiKey:'fake-emulator-key',projectId:'demo-life-lab'},'delete-test');
+const auth=getAuth(app);connectAuthEmulator(auth,'http://'+process.env.FIREBASE_AUTH_EMULATOR_HOST,{disableWarnings:true});
+const db=getFirestore(app);const [host,port]=process.env.FIRESTORE_EMULATOR_HOST.split(':');connectFirestoreEmulator(db,host,Number(port));
+const env=await initializeTestEnvironment({projectId:'demo-life-lab',firestore:{host,port:Number(port),rules:fs.readFileSync('public/firestore.rules','utf8')}});
+const password='Emulator-only-password-42';
+try{
+ const other=await createUserWithEmailAndPassword(auth,'keep@withdraw.invalid',password);
+ const data={title:'Test experiment',hypothesis:'',a:'A',b:'B',days:7,start:'2026-11-19',metric:'Focus',unit:'points',max:10,category:'Study',entries:{},createdAt:serverTimestamp(),updatedAt:serverTimestamp()};
+ let batch=writeBatch(db);batch.set(doc(db,'users',other.user.uid,'experiments','keep'),data);await batch.commit();
+ const account=await createUserWithEmailAndPassword(auth,'delete@withdraw.invalid',password);
+ batch=writeBatch(db);for(let i=0;i<201;i++)batch.set(doc(db,'users',account.user.uid,'experiments','entry-'+i),data);await batch.commit();
+ const owned=collection(db,'users',account.user.uid,'experiments');
+ assert.equal((await getDocs(owned)).size,201);
+ await assert.rejects(eraseAccount({user:account.user,db,isCurrent:()=>auth.currentUser?.uid===account.user.uid,reauthenticate:async()=>{throw new Error('User cancelled identity confirmation')}}),/cancelled/);
+ assert.equal((await getDocs(owned)).size,201,'Cancelled reauthentication must leave records intact');
+ await assert.rejects(eraseAccount({user:account.user,db,isCurrent:()=>false,reauthenticate:async()=>true}),/계정이 변경/);
+ assert.equal((await getDocs(owned)).size,201,'An account switch must prevent deletion');
+ const stages=[];
+ await eraseAccount({user:account.user,db,isCurrent:()=>auth.currentUser?.uid===account.user.uid,onStage:stage=>stages.push(stage),reauthenticate:()=>reauthenticateWithCredential(account.user,EmailAuthProvider.credential('delete@withdraw.invalid',password))});
+ assert.deepEqual(stages,['reauthenticate','records','account']);
+ assert.equal(auth.currentUser,null);
+ await env.withSecurityRulesDisabled(async context=>{assert.equal((await getDocs(collection(context.firestore(),'users',account.user.uid,'experiments'))).size,0);assert.equal((await getDocs(collection(context.firestore(),'users',other.user.uid,'experiments'))).size,1)});
+ await assert.rejects(signInWithEmailAndPassword(auth,'delete@withdraw.invalid',password),error=>['auth/user-not-found','auth/invalid-credential','auth/invalid-login-credentials'].includes(error.code),'The deleted account must no longer be able to sign in');
+ await signInWithEmailAndPassword(auth,'keep@withdraw.invalid',password);
+ assert.equal((await getDocs(collection(db,'users',other.user.uid,'experiments'))).size,1);
+ console.log('Passed: cancellation safety, account-switch guard, identity-first ordering, 201-record paginated deletion, Auth deletion and preservation of another user.');
+}finally{await env.cleanup();await terminate(db);await deleteApp(app)}

@@ -1,0 +1,20 @@
+import { build } from 'esbuild';
+import { readFile, writeFile, mkdir, rm, cp } from 'node:fs/promises';
+import { resolve, dirname, basename } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
+const out=resolve(root,'dist');
+if(dirname(out)!==root||basename(out)!=='dist')throw new Error('Invalid output directory');
+await rm(out,{recursive:true,force:true});
+await mkdir(out,{recursive:true});
+const result=await build({absWorkingDir:root,entryPoints:['src/main.tsx'],outdir:'dist/assets',entryNames:'index-[hash]',assetNames:'[name]-[hash]',publicPath:'/assets',loader:{'.png':'file'},bundle:true,minify:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',metafile:true,logLevel:'info',define:{'process.env.NODE_ENV':'"production"'}});
+const entry=Object.entries(result.metafile.outputs).find(([,meta])=>meta.entryPoint==='src/main.tsx');
+if(!entry)throw new Error('Missing application entry');
+const [js,meta]=entry;
+let html=await readFile(resolve(root,'index.html'),'utf8');
+html=html.replace('/src/main.tsx','/'+js.replace(/^dist\//,''));
+if(meta.cssBundle)html=html.replace('</head>',`<link rel="stylesheet" href="/${meta.cssBundle.replace(/^dist\//,'')}"/></head>`);
+await writeFile(resolve(out,'index.html'),html);
+await cp(resolve(root,'public'),out,{recursive:true});
+console.log('Production build ready: dist/');

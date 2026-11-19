@@ -1,0 +1,21 @@
+import { ArrowRight, Plus, Check, FlaskConical, BookOpen, CircleCheck, PenLine } from 'lucide-react';
+import { type Experiment, dayKey } from './model';
+import { dashboardSummary } from './dashboard';
+
+type Props={name:string|null;experiments:Experiment[];ready:boolean;onRecord:(e:Experiment)=>void;onCreate:()=>void;onResults:()=>void};
+export default function MemberHome({name,experiments,ready,onRecord,onCreate,onResults}:Props){
+ const today=dayKey();
+ const summary=dashboardSummary(experiments,today);
+ const {active,pending,todayCount,totalCount,finishedCount,days,weekCount}=summary;
+ const first=experiments.length===0;
+ const allDone=active.length>0&&pending.length===0;
+ const ratio=active.length?todayCount/active.length:0;
+ const dateLabel=new Date(today+'T12:00:00').toLocaleDateString('ko-KR',{month:'long',day:'numeric',weekday:'long'});
+ const username=name?.trim()||'연구자';
+ const title=!ready?'나의 실험을 준비하고 있어요.':first?'첫 실험을 시작해 볼까요?':allDone?'오늘의 관찰을 마쳤어요.':active.length?'오늘도 나를 알아가는 시간.':'기록 속 발견을 만나볼까요?';
+ const description=!ready?'계정의 실험이 연결되면 오늘 할 일을 확인할 수 있어요.':first?'궁금했던 두 가지 방법을 정해 보세요. 오늘부터 나만의 기록이 시작됩니다.':pending.length?`오늘 기록할 실험이 ${pending.length}개 남아 있어요. 지금의 경험을 잊기 전에 남겨 보세요.`:allDone?'오늘 할 기록을 모두 남겼어요. 쌓인 관찰에서 새로운 힌트를 찾아보세요.':'진행 중인 실험은 없어요. 완료한 결과를 살펴보거나 새로운 질문을 시작해 보세요.';
+ const action=()=>{if(pending[0])onRecord(pending[0]);else if(first)onCreate();else onResults()};
+ const actionLabel=pending.length?`남은 ${pending.length}개 기록 이어가기`:first?'첫 실험 만들기':'나의 결과 살펴보기';
+ return <section className="member-home" aria-labelledby="member-title"><div className="member-welcome"><p className="member-date"><span/>{dateLabel}</p><h1 id="member-title"><span>{username}님,</span><br/>{title}</h1><p className="member-description">{ready&&pending.length>0?<><strong>오늘 기록할 실험이 {pending.length}개 남아 있어요.</strong> 지금의 경험을 잊기 전에 남겨 보세요.</>:description}</p><div className="member-actions"><button className="primary" disabled={!ready} onClick={action}>{!ready?'실험 불러오는 중…':actionLabel}<ArrowRight size={16}/></button>{!first&&<button className="member-new" disabled={!ready} onClick={onCreate}><Plus size={16}/>새 실험 만들기</button>}</div><div className="member-facts" aria-label="나의 실험 요약"><div><span><FlaskConical size={14}/>진행 중</span><b>{ready?active.length:'—'}<small>개</small></b></div><div><span><BookOpen size={14}/>전체 기록</span><b>{ready?totalCount:'—'}<small>개</small></b></div><div><span><CircleCheck size={14}/>완료한 실험</span><b>{ready?finishedCount:'—'}<small>개</small></b></div></div></div>
+ <aside className="member-focus" aria-label="오늘과 이번 주의 기록 현황"><div className="member-focus-heading"><div><span>MY DAILY LAB</span><h2>오늘의 기록</h2></div><span className={'member-state'+(allDone?' done':'')}>{allDone?<Check size={14}/>:<PenLine size={14}/>}<span>{!ready?'연결 중':allDone?'모두 완료':active.length?'기록 진행 중':'시작을 기다려요'}</span></span></div><div className="member-progress"><div className="member-ring" role="img" aria-label={!ready?'기록 현황을 불러오는 중':`오늘 진행 중인 실험 ${active.length}개 중 ${todayCount}개 기록 완료`}><svg viewBox="0 0 88 88" aria-hidden="true"><circle cx="44" cy="44" r="36" className="member-ring-track"/><circle cx="44" cy="44" r="36" className="member-ring-fill" pathLength="100" strokeDasharray={`${ratio*100} 100`}/></svg><strong>{ready?todayCount:'—'}<small> / {ready?active.length:'—'}</small></strong></div><div><strong>{!ready?'실험을 연결하고 있어요.':pending.length?`${pending.length}개의 관찰이 기다려요.`:allDone?'오늘도 수고했어요.':'작은 질문 하나면 충분해요.'}</strong><p>{!ready?'잠시만 기다려 주세요.':pending.length?'한 번의 기록이 나만의 데이터를 만들어요.':allDone?'남긴 기록에서 차이를 확인해 보세요.':'새 실험을 만들고 첫 기록을 남겨 보세요.'}</p></div></div><div className="member-week"><div><span>이번 주의 발자국</span><span>{ready?weekCount:'—'}회 기록</span></div><ol>{days.map((day,index)=><li key={day.date} className={day.date===today?'is-today':''}><span>{['월','화','수','목','금','토','일'][index]}</span><span className={'member-day'+(day.count?' has-record':'')+(day.date>today?' is-future':'')} title={`${day.date} · 기록 ${day.count}개`} aria-label={`${day.date}, ${day.count}개 기록`}>{ready&&day.count?day.count:<span className="member-day-dot"/>}</span></li>)}</ol></div></aside></section>
+}

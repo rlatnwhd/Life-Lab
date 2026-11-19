@@ -1,0 +1,21 @@
+﻿import React from 'react';
+import { createRoot } from 'react-dom/client';
+import App from './App';
+import './styles.css';
+import './auth.css';
+import './landing.css';
+import './clarity.css';
+import './accessibility.css';
+import './experiment-card.css';
+import './planner.css';
+import './colors.css';
+import './member-home.css';
+import './emphasis.css';
+import './account-deletion.css';
+import './date-picker.css';
+delete document.documentElement.dataset.textSize;
+delete document.documentElement.dataset.highContrast;
+delete document.documentElement.dataset.reduceMotion;
+document.documentElement.style.removeProperty('--text-scale');
+try{localStorage.removeItem('life-lab-display-v1')}catch{}
+createRoot(document.getElementById('root')!).render(<React.StrictMode><App/></React.StrictMode>);

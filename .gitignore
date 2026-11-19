@@ -1,0 +1,13 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.npm-cache/
+.env
+.env.*
+!.env.example
+.vercel/
+data/
+__pycache__/
+*.log
+.venv/
+.design-review/
