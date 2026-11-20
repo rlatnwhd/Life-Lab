@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
 import './styles.css';
@@ -13,6 +13,7 @@ import './member-home.css';
 import './emphasis.css';
 import './account-deletion.css';
 import './date-picker.css';
+import './record-flow.css';
 delete document.documentElement.dataset.textSize;
 delete document.documentElement.dataset.highContrast;
 delete document.documentElement.dataset.reduceMotion;

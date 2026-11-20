@@ -49,6 +49,9 @@ try{
  await evaluate(`document.querySelector('.import-banner button').click()`);
  await waitFor(`!document.querySelector('.import-banner')&&document.querySelectorAll('.experiment-card').length===1`);
  await evaluate(`document.querySelector('.member-actions .primary').click()`);
+ await waitFor(`!!document.querySelector('.record-choice')`);
+ assert.equal(await evaluate(`!!document.querySelector('.record-form')`),false,'Continue must ask which experiment to record first');
+ await evaluate(`document.querySelector('.record-choice').click()`);
  await waitFor(`!!document.querySelector('.record-form')`);
  await evaluate(`document.querySelector('[aria-label="닫기"]').click()`);
  assert.equal((await evaluate('qa.qaExperiments()')).length,1);
